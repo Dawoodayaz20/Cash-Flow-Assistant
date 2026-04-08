@@ -15,7 +15,7 @@ def get_db():
         _client = MongoClient(MONGODB_URI)
     return _client[DB_NAME]
 
-db = get_db()
+database = get_db()
 
 try:
     _client.admin.command('ping')
