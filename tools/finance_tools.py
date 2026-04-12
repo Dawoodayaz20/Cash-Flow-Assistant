@@ -2,6 +2,7 @@ from db.mongo import database;
 from agents import Agent, Runner, RunContextWrapper, function_tool
 from bson import ObjectId
 from FloAgent.context import UserFinanceContext
+from datetime import datetime
 
 @function_tool
 def get_transactions(ctx: RunContextWrapper[UserFinanceContext]):
@@ -116,7 +117,57 @@ def forecast_balance(ctx: RunContextWrapper[UserFinanceContext]):
         "recurring_transactions": recurring
     }
 
-
-# @function_tool
-# def get_unusual_spending(ctx: RunContextWrapper[UserFinanceContext]):
+@function_tool
+def detect_unusual_spending(ctx: RunContextWrapper[UserFinanceContext]):
+    """Compare current month's spending per category against user-defined budget limits."""
     
+    print("🔧 [TOOL CALL] detect_unusual_spending was executed")
+    
+    userId = ctx.context.userId
+    
+    # Get budget limits from settings
+    settings = database.settings.find_one(
+        {"userId": ObjectId(userId)},
+        {"budgetLimits": 1, "_id": 0}
+    )
+    
+    if not settings:
+        return "No settings found for this user."
+    
+    budget_limits = settings.get("budgetLimits", {})
+    
+    # Get current month's expenses
+    now = datetime.timezone.utcnow()
+    start_of_month = datetime(now.year, now.month, 1)
+    
+    expenses = list(database.transactions.find(
+        {
+            "userId": ObjectId(userId),
+            "type": "expense",
+            "date": {"$gte": start_of_month}
+        },
+        {"category": 1, "amount": 1, "_id": 0}
+    ))
+    
+    # Sum by category
+    spending = {}
+    for t in expenses:
+        cat = t.get("category", "Other")
+        spending[cat] = spending.get(cat, 0) + t["amount"]
+    
+    # Compare against budget limits
+    flagged = []
+    for category, spent in spending.items():
+        limit = budget_limits.get(category)
+        if limit and spent > limit:
+            flagged.append({
+                "category": category,
+                "spent": round(spent, 2),
+                "limit": limit,
+                "over_by": round(spent - limit, 2)
+            })
+    
+    if not flagged:
+        return "No unusual spending detected this month."
+    
+    return flagged
