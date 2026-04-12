@@ -4,7 +4,7 @@ from dotenv import load_dotenv, find_dotenv
 import asyncio
 import os
 from FloAgent.context import UserFinanceContext
-from tools.finance_tools import get_financial_summary, get_spending_by_category, get_recurring_transactions, get_transactions
+from tools.finance_tools import get_financial_summary, get_spending_by_category, get_recurring_transactions, get_transactions, forecast_balance
 from tools.user_data_tools import fetch_settings
 
 # RunHooks, AgentHooks,
@@ -31,9 +31,6 @@ config = RunConfig(
 )
 
 async def kickoff(question: str, userID: str, name: str, email: str):
-  
-#   name: str = 'Dawood Ayaz'
-#   email : str = 'dawoodayaz18@gmail.com'
 
   try:
     user_context = UserFinanceContext(
@@ -71,7 +68,8 @@ async def kickoff(question: str, userID: str, name: str, email: str):
         get_transactions,
         get_financial_summary,
         get_spending_by_category,
-        get_recurring_transactions
+        get_recurring_transactions,
+        forecast_balance
         ]
     )
 
@@ -87,8 +85,10 @@ async def kickoff(question: str, userID: str, name: str, email: str):
       print(f"There was an error connecting the Server:{e}")
 
 # if __name__ == '__main__':
+#   asyncio.run(kickoff(question1, userID, name, email))
+
+# test_data:
 #   question1 : str = "Are you able to access my database with my userID and name because I have some transactions made recently that I saved in it, if yes, then tell me about them"
 #   userID : str = '69ba9e8e3427be64889d8d2b'
 #   name: str = 'Dawood Ayaz'
 #   email : str = 'dawoodayaz18@gmail.com' 
-#   asyncio.run(kickoff(question1, userID, name, email))
