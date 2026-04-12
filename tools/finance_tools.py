@@ -87,3 +87,36 @@ def get_recurring_transactions(ctx: RunContextWrapper[UserFinanceContext]):
     
     print(f"   → Returned {len(transactions)} recurring transactions")
     return transactions
+
+@function_tool
+def forecast_balance(ctx: RunContextWrapper[UserFinanceContext]):
+    """Fetch current balance and all recurring transactions so the agent can forecast future balance."""
+    
+    print("🔧 [TOOL CALL] forecast_balance was executed")
+    
+    userId = ctx.context.userId
+    
+    all_transactions = list(database.transactions.find(
+        {"userId": ObjectId(userId)},
+        {"type": 1, "amount": 1, "_id": 0}
+    ))
+    
+    current_balance = sum(
+        t["amount"] if t["type"] == "income" else -t["amount"]
+        for t in all_transactions
+    )
+    
+    recurring = list(database.transactions.find(
+        {"userId": ObjectId(userId), "recurring.isRecurring": True},
+        {"_id": 0, "userId": 0}
+    ))
+    
+    return {
+        "current_balance": round(current_balance, 2),
+        "recurring_transactions": recurring
+    }
+
+
+# @function_tool
+# def get_unusual_spending(ctx: RunContextWrapper[UserFinanceContext]):
+    
