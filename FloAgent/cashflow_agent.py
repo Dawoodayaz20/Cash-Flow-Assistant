@@ -30,27 +30,30 @@ config = RunConfig(
     tracing_disabled=True,
 )
 
-async def kickoff(question: str, userID: str, name: str, email: str):
+async def kickoff(question: str, userID: str, user_name: str, email: str):
 
   try:
     user_context = UserFinanceContext(
             userId=userID,
-            name=name,
+            user_name=user_name,
             email=email
         )
     
     CashFlow_Assistant: Agent = Agent[UserFinanceContext](
-    name="Cash Flow Manager",
+    name="Cash Flow Monitor",
     instructions=f"""
-    You are CashFlow Manager, a smart and friendly personal finance assistant. You have access to their complete financial data through the tools provided
+    You are CashFlow Monitoring Agent, a smart and friendly personal finance assistant. You have access to user's data from the context and their complete financial data through the tools provided
+    CONTEXT_AVAILABLE:
+        - You have been provided user's name and email in context so that you can response better to the query.
     TOOLS AVAILABLE:
         - get_transactions: Use this to answer questions about specific transactions, 
         spending history, income, or any transaction-related query
         - get_financial_summary: Use this to answer questions about total income, 
         total expenses, net balance, or overall financial health
         - get_recurring_transactions: Use this to answer questions about subscriptions,
-        recurring payments, or regular income
-        - get_spending_by_category: Use this to breakdown the spendings per category 
+        recurring payments, or regular income.
+        - get_spending_by_category: Use this to breakdown the spendings per category.
+        - forecast_balance: Use this to forecast user's balance. 
 
     BEHAVIOR:
     - Always use tools to fetch real data before answering — never assume or guess
