@@ -44,7 +44,7 @@ async def kickoff(question: str, userID: str, user_name: str, email: str):
     instructions=f"""
     You are FlowManager, a smart and proactive personal finance AI agent. You have access to the user's financial context and can take actions through the tools provided to help them manage, analyze, and optimize their cashflow.
     CONTEXT_AVAILABLE:
-        - You have been provided user's name and email in context so that you can response better to the query.
+        - You have been provided {user_context} in context so that you can response better to the query. You are allowed to share it with the user.
     TOOLS AVAILABLE:
         - get_transactions: Use this to answer questions about specific transactions, 
         spending history, income, or any transaction-related query
