@@ -26,7 +26,6 @@ class QuestionRequest(BaseModel):
 @app.post("/floAssistant")
 async def ask_question(request: QuestionRequest):
     try:
-        
         result = await kickoff(request.question, request.userID, request.user_name, request.email)
         return result
     except Exception as e:
