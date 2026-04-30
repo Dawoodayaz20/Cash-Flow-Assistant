@@ -7,8 +7,6 @@ from FloAgent.context import UserFinanceContext
 from tools.finance_tools import get_financial_summary, get_spending_by_category, get_recurring_transactions, get_transactions, forecast_balance
 from tools.user_data_tools import fetch_settings
 
-# RunHooks, AgentHooks,
-
 load_dotenv(find_dotenv())
 set_tracing_disabled(disabled=True)
 
@@ -38,20 +36,27 @@ async def kickoff(question: str, userID: str, user_name: str, email: str):
             user_name=user_name,
             email=email
         )
+
+    General_Assistant : Agent = Agent[UserFinanceContext](
+       name="General_Assistant",
+       instructions="""
+            You are a helpful general assistant.
+            Answer greetings, general knowledge questions, accounting concepts, and app navigation queries.
+            You do not have access to the user's financial data.
+           """,
+       handoff_description="Handles general queries, greetings, app navigation, and financial questions not related to personal data."
+    )
     
-    CashFlow_Assistant: Agent = Agent[UserFinanceContext](
-    name="Cash Flow Manager",
+    Financial_Assistant: Agent = Agent[UserFinanceContext](
+    name="Finance_Manager",
     instructions=f"""
-    You are FlowManager, a smart and proactive personal finance AI agent. You have access to the user's financial context and can take actions through the tools provided to help them manage, analyze, and optimize their cashflow.
+    You are Finance Manager, a smart and proactive personal finance AI agent. You have access to the user's financial context and can take actions through the tools provided to help them manage, analyze, and optimize their cashflow.
     CONTEXT_AVAILABLE:
         - You have been provided {user_context} in context so that you can response better to the query. You are allowed to share it with the user.
     TOOLS AVAILABLE:
-        - get_transactions: Use this to answer questions about specific transactions, 
-        spending history, income, or any transaction-related query
-        - get_financial_summary: Use this to answer questions about total income, 
-        total expenses, net balance, or overall financial health
-        - get_recurring_transactions: Use this to answer questions about subscriptions,
-        recurring payments, or regular income.
+        - get_transactions: Use this to answer questions about specific transactions, spending history, income, or any transaction-related query. 
+        - get_financial_summary: Use this to answer questions about total income, total expenses, net balance, or overall financial health
+        - get_recurring_transactions: Use this to answer questions about subscriptions, recurring payments, or regular income.
         - get_spending_by_category: Use this to breakdown the spendings per category.
         - forecast_balance: Use this to forecast user's balance. 
 
@@ -73,16 +78,33 @@ async def kickoff(question: str, userID: str, user_name: str, email: str):
         get_spending_by_category,
         get_recurring_transactions,
         forecast_balance
-        ]
+        ],
+    handoff_description="Handles cashflow analysis, expenses, budgets, invoices, and any personal financial data queries."
+    )
+
+    Triage_Agent : Agent = Agent(
+        name="Triage_Agent",
+        instructions="""
+            You are a silent routing agent. 
+            DO NOT respond to the user directly.
+            DO NOT explain or announce the handoff.
+            ONLY route to the correct agent immediately.
+            
+            Rules:
+            - Route to "Finance_Manager" ONLY if the user is asking about THEIR OWN financial data (their transactions, their expenses, their cashflow, their balance)
+            - Route EVERYTHING else to "General_Assistant", including general knowledge, accounting standards, greetings, app navigation
+            """,
+        handoffs=[General_Assistant, Financial_Assistant]
     )
 
     result = await Runner.run(
-      CashFlow_Assistant, 
+      Triage_Agent, 
       question,
       run_config=config,
       context= user_context 
     )
     print(result.final_output)
+    print(result.last_agent.name)
     return result.final_output
   except Exception as e:
       print(f"There was an error connecting the Server:{e}")
@@ -95,3 +117,7 @@ async def kickoff(question: str, userID: str, user_name: str, email: str):
 #   userID : str = '69ba9e8e3427be64889d8d2b'
 #   name: str = 'Dawood Ayaz'
 #   email : str = 'dawoodayaz18@gmail.com' 
+
+# I cannot provide an exact amount without more information about your financial goals and obligations. However, I can help you by providing your financial summary and recurring transactions, which can help you to understand how much you can spend more.
+
+# Would you like me to get your financial summary and recurring transactions?
