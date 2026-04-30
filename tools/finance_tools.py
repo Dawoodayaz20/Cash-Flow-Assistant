@@ -9,10 +9,10 @@ def get_transactions(ctx: RunContextWrapper[UserFinanceContext]):
     """Fetch all transactions for the current user."""
 
     print("🔧 [TOOL CALL] get_transactions was executed")
-    print(f"   User ID: {ctx.context.userId}")
+    # print(f"   User ID: {ctx.context.userId}")
 
-    print(f"DB name: {database.name}")
-    print(f"Collections: {database.list_collection_names()}")
+    # print(f"DB name: {database.name}")
+    # print(f"Collections: {database.list_collection_names()}")
 
     userId = ctx.context.userId
     transactions = list(database.transactions.find(
@@ -22,13 +22,13 @@ def get_transactions(ctx: RunContextWrapper[UserFinanceContext]):
     if not transactions:
         return "No transactions found for this user."
     
-    print(f"   → Returned {len(transactions)} transactions")
+    # print(f"   → Returned {len(transactions)} transactions")
     return transactions
 
 @function_tool
 def get_financial_summary(ctx: RunContextWrapper[UserFinanceContext]):
    """ Get total income, total expenses, and net balance for the current user. """
-   
+   print("🔧 [TOOL CALL] get_financial_summary was executed")
    userId = ctx.context.userId
    transactions = list(database.transactions.find(
       {"userId": ObjectId(userId)},
