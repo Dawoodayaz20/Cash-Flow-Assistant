@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from FloAgent.cashflow_agent import kickoff
+from tools.get_chats import get_session_messages
 from pydantic import BaseModel
 from dotenv import load_dotenv, find_dotenv
 import os
@@ -24,11 +25,12 @@ class QuestionRequest(BaseModel):
     userID: str
     user_name: str
     email: str
+    session_id: str
 
 @app.post("/floAssistant")
 async def ask_question(request: QuestionRequest):
     try:
-        result = await kickoff(request.question, request.userID, request.user_name, request.email)
+        result = await kickoff(request.question, request.userID, request.user_name, request.email, request.session_id)
         return result
     
     except RateLimitError:
