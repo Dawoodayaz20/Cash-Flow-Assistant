@@ -3,14 +3,15 @@ from dataclasses import dataclass
 from dotenv import load_dotenv, find_dotenv
 import asyncio
 import os
-from FloAgent.context import UserFinanceContext
+from FloAgent.context import UserFinanceContext, ChatHistoryItem
+from tools.get_chats import get_session_messages, format_history
 from tools.finance_tools import get_financial_summary, get_spending_by_category, get_recurring_transactions, get_transactions, forecast_balance
 from tools.user_data_tools import fetch_settings
 
 load_dotenv(find_dotenv())
 set_tracing_disabled(disabled=True)
 
-API_KEY = os.getenv("API_KEY")
+API_KEY = os.getenv("GEMINI_SEC_KEY")
 
 external_client = AsyncOpenAI(
     api_key=API_KEY,
@@ -28,13 +29,17 @@ config = RunConfig(
     tracing_disabled=True,
 )
 
-async def kickoff(question: str, userID: str, user_name: str, email: str):
+async def kickoff(question: str, userID: str, user_name: str, email: str, session_id: str):
+
+  history = get_session_messages(userID, session_id)
+  print(history)
 
   try:
     user_context = UserFinanceContext(
             userId=userID,
             user_name=user_name,
-            email=email
+            email=email,
+            chat_history=[ChatHistoryItem(**msg) for msg in history]
         )
 
     General_Assistant : Agent = Agent[UserFinanceContext](
@@ -42,7 +47,8 @@ async def kickoff(question: str, userID: str, user_name: str, email: str):
        instructions="""
             You are a helpful general assistant.
             Answer greetings, general knowledge questions, accounting concepts, and app navigation queries.
-            You do not have access to the user's financial data.
+            You have access to the user's financial data.
+            You have been provided the chat_history in context with user's data 
            """,
        handoff_description="Handles general queries, greetings, app navigation, and financial questions not related to personal data."
     )
@@ -52,7 +58,7 @@ async def kickoff(question: str, userID: str, user_name: str, email: str):
     instructions=f"""
     You are Finance Manager, a smart and proactive personal finance AI agent. You have access to the user's financial context and can take actions through the tools provided to help them manage, analyze, and optimize their cashflow.
     CONTEXT_AVAILABLE:
-        - You have been provided {user_context} in context so that you can response better to the query. You are allowed to share it with the user.
+        - You have been provided user_data and chat_history in context so that you can response better to the query. You are allowed to share it with the user.
     TOOLS AVAILABLE:
         - get_transactions: Use this to answer questions about specific transactions, spending history, income, or any transaction-related query. 
         - get_financial_summary: Use this to answer questions about total income, total expenses, net balance, or overall financial health
@@ -60,8 +66,15 @@ async def kickoff(question: str, userID: str, user_name: str, email: str):
         - get_spending_by_category: Use this to breakdown the spendings per category.
         - forecast_balance: Use this to forecast user's balance. 
 
+    CHAT HISTORY:
+    - You have access to the user's previous messages in this session.
+    - Use it to maintain conversation continuity and avoid asking for info already provided.
+    - Do NOT repeat or summarize the history unless explicitly asked.
+
     BEHAVIOR:
     - Always use tools to fetch real data before answering — never assume or guess
+    - Never hallucinate
+    - Always respond to the user using chat history given in context 
     - Present numbers clearly with the user's currency
     - For forecasting questions, use get_transactions to analyze patterns
     - Keep responses concise and easy to understand
@@ -91,15 +104,26 @@ async def kickoff(question: str, userID: str, user_name: str, email: str):
             ONLY route to the correct agent immediately.
             
             Rules:
+            - Use chat_history context to better understand the intent if the current message is ambiguous.
             - Route to "Finance_Manager" ONLY if the user is asking about THEIR OWN financial data (their transactions, their expenses, their cashflow, their balance)
             - Route EVERYTHING else to "General_Assistant", including general knowledge, accounting standards, greetings, app navigation
             """,
         handoffs=[General_Assistant, Financial_Assistant]
     )
 
+    history_str = format_history(user_context.chat_history)
+
+    input_with_history = f"""
+        PREVIOUS CONVERSATION:
+        {history_str}
+
+        CURRENT MESSAGE:
+        {question}
+    """ 
+
     result = await Runner.run(
       Triage_Agent, 
-      question,
+      input_with_history,
       run_config=config,
       context= user_context 
     )
