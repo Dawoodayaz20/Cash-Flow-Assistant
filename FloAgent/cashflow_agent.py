@@ -9,11 +9,10 @@ from tools.finance_tools import get_financial_summary, get_spending_by_category,
 from tools.user_data_tools import fetch_settings
 
 load_dotenv(find_dotenv())
-set_tracing_disabled(disabled=True)
-
-API_KEY = os.getenv("GEMINI_SEC_KEY")
 
 async def kickoff(question: str, userID: str, user_name: str, email: str, session_id: str):
+  API_KEY = os.getenv("GEMINI_SEC_KEY")
+  
   external_client = AsyncOpenAI(
     api_key=API_KEY,
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
@@ -29,6 +28,8 @@ async def kickoff(question: str, userID: str, user_name: str, email: str, sessio
     model_provider=external_client,
     tracing_disabled=True,
   )
+  
+  set_tracing_disabled(disabled=True)
 
   history = get_session_messages(userID, session_id)
   print(history)
