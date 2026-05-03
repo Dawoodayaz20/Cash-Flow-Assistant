@@ -13,23 +13,22 @@ set_tracing_disabled(disabled=True)
 
 API_KEY = os.getenv("GEMINI_SEC_KEY")
 
-external_client = AsyncOpenAI(
+async def kickoff(question: str, userID: str, user_name: str, email: str, session_id: str):
+  external_client = AsyncOpenAI(
     api_key=API_KEY,
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-)
-
-model = OpenAIChatCompletionsModel(
+  )
+    
+  model = OpenAIChatCompletionsModel(
     model="gemini-2.5-flash",
     openai_client=external_client
-)
-
-config = RunConfig(
+  )
+    
+  config = RunConfig(
     model=model,
     model_provider=external_client,
     tracing_disabled=True,
-)
-
-async def kickoff(question: str, userID: str, user_name: str, email: str, session_id: str):
+  )
 
   history = get_session_messages(userID, session_id)
   print(history)
