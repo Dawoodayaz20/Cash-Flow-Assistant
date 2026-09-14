@@ -32,7 +32,14 @@ async def ask_question(request: QuestionRequest):
     try:
         result = await kickoff(request.question, request.userID, request.user_name, request.email, request.session_id)
         return result
-    
+    except RuntimeError as e:
+    if str(e) == "rate_limit_exceeded":
+        return JSONResponse(
+            status_code=429,
+            content={"success": False, "error": "rate_limit", "message": "API quota exceeded. Try again shortly."}
+        )
+    raise
+
     except RateLimitError:
         return JSONResponse(
             status_code=429,
