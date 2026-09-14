@@ -19,7 +19,7 @@ async def kickoff(question: str, userID: str, user_name: str, email: str, sessio
   )
     
   model = OpenAIChatCompletionsModel(
-    model="gemini-2.5-flash",
+    model="gemini-3.6-flash",
     openai_client=external_client
   )
     
