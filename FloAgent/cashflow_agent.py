@@ -11,7 +11,7 @@ from tools.user_data_tools import fetch_settings
 load_dotenv(find_dotenv())
 
 async def kickoff(question: str, userID: str, user_name: str, email: str, session_id: str):
-  API_KEY = os.getenv("GEMINI_SEC_KEY")
+  API_KEY = os.getenv("GEMINI_THIRD_KEY")
   
   external_client = AsyncOpenAI(
     api_key=API_KEY,
