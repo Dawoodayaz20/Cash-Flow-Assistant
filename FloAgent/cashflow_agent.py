@@ -131,17 +131,8 @@ async def kickoff(question: str, userID: str, user_name: str, email: str, sessio
     print(result.last_agent.name)
     return result.final_output
   except Exception as e:
-      print(f"There was an error connecting the Server:{e}")
+    print(f"There was an error connecting the Server:{e}")
+    if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+        raise RuntimeError("rate_limit_exceeded") from e
+    raise
 
-# if __name__ == '__main__':
-#   asyncio.run(kickoff(question1, userID, name, email))
-
-# test_data:
-#   question1 : str = "Are you able to access my database with my userID and name because I have some transactions made recently that I saved in it, if yes, then tell me about them"
-#   userID : str = '69ba9e8e3427be64889d8d2b'
-#   name: str = 'Dawood Ayaz'
-#   email : str = 'dawoodayaz18@gmail.com' 
-
-# I cannot provide an exact amount without more information about your financial goals and obligations. However, I can help you by providing your financial summary and recurring transactions, which can help you to understand how much you can spend more.
-
-# Would you like me to get your financial summary and recurring transactions?
