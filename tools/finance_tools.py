@@ -1,7 +1,7 @@
 from db.mongo import database;
 from agents import Agent, Runner, RunContextWrapper, function_tool
 from bson import ObjectId
-from FloAgent.context import UserFinanceContext
+from FloAgent.context import UserFinanceContext, TransactionForm
 from datetime import datetime
 
 @function_tool
@@ -171,3 +171,9 @@ def detect_unusual_spending(ctx: RunContextWrapper[UserFinanceContext]):
         return "No unusual spending detected this month."
     
     return flagged
+
+@function_tool
+def add_transaction(ctx: RunContextWrapper[UserFinanceContext], form: TransactionForm) -> str:
+    """Prepare a transaction form for the user to confirm. Does NOT save it."""
+    ctx.context.proposal = form
+    return "Proposal prepared. Tell the user to review and confirm it in the card."
