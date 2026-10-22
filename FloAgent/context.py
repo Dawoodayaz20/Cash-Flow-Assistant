@@ -1,4 +1,22 @@
 from dataclasses import dataclass
+from typing import Literal
+from pydantic import BaseModel, Field
+
+TxType = Literal["income", "expense"]
+Frequency = Literal["weekly", "monthly", "yearly"]
+
+class RecurringInfo(BaseModel):
+    isRecurring: bool
+    frequency: Frequency | None
+    endDate: str | None
+
+class TransactionForm(BaseModel):
+    type: TxType
+    amount: float
+    category: str
+    note: str | None
+    date: str
+    recurring: RecurringInfo
 
 @dataclass
 class ChatHistoryItem:
@@ -15,3 +33,4 @@ class UserFinanceContext:
     user_name: str
     email: str
     chat_history: list[ChatHistoryItem] = None
+    proposal: TransactionForm | None = None
