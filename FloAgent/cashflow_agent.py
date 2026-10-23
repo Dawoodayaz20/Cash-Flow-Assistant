@@ -5,13 +5,13 @@ import asyncio
 import os
 from FloAgent.context import UserFinanceContext, ChatHistoryItem
 from tools.get_chats import get_session_messages, format_history
-from tools.finance_tools import get_financial_summary, get_spending_by_category, get_recurring_transactions, get_transactions, forecast_balance
+from tools.finance_tools import get_financial_summary, get_spending_by_category, get_recurring_transactions, get_transactions, forecast_balance, add_transaction
 from tools.user_data_tools import fetch_settings
 
 load_dotenv(find_dotenv())
 
 async def kickoff(question: str, userID: str, user_name: str, email: str, session_id: str):
-  API_KEY = os.getenv("GEMINI_THIRD_KEY")
+  API_KEY = os.getenv("GEMINI_SEC_KEY")
   
   external_client = AsyncOpenAI(
     api_key=API_KEY,
@@ -32,14 +32,15 @@ async def kickoff(question: str, userID: str, user_name: str, email: str, sessio
   set_tracing_disabled(disabled=True)
 
   history = get_session_messages(userID, session_id)
-  print(history)
+  # print(history)
 
   try:
     user_context = UserFinanceContext(
             userId=userID,
             user_name=user_name,
             email=email,
-            chat_history=[ChatHistoryItem(**msg) for msg in history]
+            chat_history=[ChatHistoryItem(**msg) for msg in history],
+            proposal = None
         )
 
     General_Assistant : Agent = Agent[UserFinanceContext](
@@ -90,7 +91,8 @@ async def kickoff(question: str, userID: str, user_name: str, email: str, sessio
         get_financial_summary,
         get_spending_by_category,
         get_recurring_transactions,
-        forecast_balance
+        forecast_balance,
+        add_transaction
         ],
     handoff_description="Handles cashflow analysis, expenses, budgets, invoices, and any personal financial data queries."
     )
@@ -129,7 +131,10 @@ async def kickoff(question: str, userID: str, user_name: str, email: str, sessio
     )
     print(result.final_output)
     print(result.last_agent.name)
-    return result.final_output
+    return {
+       "reply": result.final_output,
+       "proposal": user_context.proposal.model_dump() if user_context.proposal else None,
+      }
   except Exception as e:
     print(f"There was an error connecting the Server:{e}")
     if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
