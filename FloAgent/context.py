@@ -3,12 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 TxType = Literal["income", "expense"]
-Frequency = Literal["weekly", "monthly", "yearly"]
-
-class RecurringInfo(BaseModel):
-    isRecurring: bool
-    frequency: Frequency | None
-    endDate: str | None
+Frequency = Literal["weekly", "monthly", "yearly"]    
 
 class TransactionForm(BaseModel):
     type: TxType
@@ -16,7 +11,9 @@ class TransactionForm(BaseModel):
     category: str
     note: str | None
     date: str
-    recurring: RecurringInfo
+    isRecurring: bool
+    frequency: Frequency | None
+    endDate: str | None
 
 @dataclass
 class ChatHistoryItem:
