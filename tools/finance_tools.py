@@ -6,7 +6,7 @@ from datetime import datetime
 
 @function_tool
 def get_transactions(ctx: RunContextWrapper[UserFinanceContext]):
-    """Fetch all transactions for the current user."""
+    """Fetch transactions for the current user."""
 
     print("🔧 [TOOL CALL] get_transactions was executed")
     # print(f"   User ID: {ctx.context.userId}")
@@ -173,7 +173,8 @@ def detect_unusual_spending(ctx: RunContextWrapper[UserFinanceContext]):
     return flagged
 
 @function_tool
-def add_transaction(ctx: RunContextWrapper[UserFinanceContext], form: TransactionForm) -> str:
+def prepare_transaction(ctx: RunContextWrapper[UserFinanceContext], form: TransactionForm) -> str:
     """Prepare a transaction form for the user to confirm. Does NOT save it."""
+    print("🔧 [TOOL CALL] prepare_transaction was executed!")
     ctx.context.proposal = form
     return "Proposal prepared. Tell the user to review and confirm it in the card."
