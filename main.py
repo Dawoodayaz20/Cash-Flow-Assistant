@@ -63,11 +63,15 @@ import os
 
 load_dotenv(find_dotenv())
 app = FastAPI()
-request_origin = os.getenv("request_origin")
+request_origin_prod = os.getenv("request_origin_prod")
+request_origin_dev = os.getenv("request_origin_dev")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[f"{request_origin}"],
+    allow_origins=[
+        f"{request_origin_dev}",
+        f"{request_origin_prod}",
+        ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
