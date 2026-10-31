@@ -69,7 +69,7 @@ request_origin_dev = os.getenv("request_origin_dev")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        f"{request_origin_dev}",
+        "http://localhost:5173",
         f"{request_origin_prod}",
         ],
     allow_credentials=True,
